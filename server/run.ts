@@ -74,7 +74,7 @@ export async function runPathA(input: RunInput, deps: Deps = realDeps) {
     ];
     // No tools on the second call: we want the final answer, not another tool call.
     t = performance.now();
-    const second = await deps.chat(model, messages);
+    const second = await deps.chat(model, [{ role: "system", content: ANSWER_STYLE }, ...messages]);
     timings.llmMs = SINCE(t);
 
     return {
@@ -91,11 +91,15 @@ export async function runPathA(input: RunInput, deps: Deps = realDeps) {
   }
 }
 
+// Same style for both paths so the comparison is about who picks the tool, not about answer length.
+const ANSWER_STYLE =
+  "Write a complete, friendly, well-organized answer in the user's language: open with a full sentence that puts the key facts in context (for example 'Right now in Oslo it is cloudy and 6 °C, so a jacket is a good idea'), then, when the result has several fields, a short list. Never output raw JSON or field names.";
+
 const ANSWER_SYSTEM_PROMPT = [
   "You answer customer questions using only the tool result JSON in the user message. Do not add outside knowledge.",
   'If the tool result has error "missing_data", ask the user for the item named in "missing".',
   'If the tool is "none", say you cannot help with that using the available tools.',
-  "Reply in the user's language, briefly.",
+  ANSWER_STYLE,
 ].join(" ");
 
 // Path B: a decider (Jev) picks the tool and arguments; code runs it; the answering model only reads the result.
