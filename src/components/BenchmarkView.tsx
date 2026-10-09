@@ -283,8 +283,8 @@ function PathCells({ mode, bench }: { mode: Contender["mode"]; bench: ContenderB
   }
   if (!isOk(bench)) {
     return (
-      <td colSpan={5} className={`bench-note bench-fail ${cls}`}>
-        Failed: {bench.error}
+      <td colSpan={5} className={`bench-note bench-fail ${cls}`} title={bench.error}>
+        Failed: {bench.error.length > 90 ? `${bench.error.slice(0, 90)}…` : bench.error}
       </td>
     );
   }

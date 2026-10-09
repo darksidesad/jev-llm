@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 460" role="img" aria-labelledby="jev-title jev-desc">
+  <title id="jev-title">What Jev receives and returns</title>
+  <desc id="jev-desc">Left: Jev receives the state with the question and a Choice question with instructions and criteria for each tool, plus none. Right: Jev returns the chosen option get_weather, its probabilities and a confidence. A second Choice over cities resolves the city argument.</desc>
+  <defs>
+    <marker id="jd-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#E8590C"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="460" rx="16" fill="#F8F9FA"/>
+
+  <!-- Left: receives -->
+  <rect x="20" y="20" width="420" height="352" rx="12" fill="#FFFFFF" stroke="#343A40" stroke-width="1.5"/>
+  <text x="40" y="54" font-size="18" font-weight="bold" fill="#1A1B1E">Jev receives</text>
+
+  <text x="40" y="88" font-size="15" font-weight="bold" fill="#1A1B1E">state</text>
+  <text x="40" y="110" font-family="monospace" font-size="14" fill="#1A1B1E">"What is the weather in Madrid?"</text>
+
+  <text x="40" y="142" font-size="15" font-weight="bold" fill="#1A1B1E">choice question</text>
+  <text x="40" y="164" font-size="14" fill="#1A1B1E">Which tool should answer this question?</text>
+  <text x="40" y="184" font-size="14" fill="#343A40">Pick none if no tool fits.</text>
+
+  <text x="40" y="216" font-size="15" font-weight="bold" fill="#1A1B1E">criteria (options)</text>
+  <text x="40" y="240" font-family="monospace" font-size="14" fill="#E8590C" font-weight="bold">get_order</text>
+  <text x="200" y="240" font-size="14" fill="#1A1B1E">order status, ETA, items</text>
+  <text x="40" y="262" font-family="monospace" font-size="14" fill="#E8590C" font-weight="bold">get_weather</text>
+  <text x="200" y="262" font-size="14" fill="#1A1B1E">weather or temperature</text>
+  <text x="40" y="284" font-family="monospace" font-size="14" fill="#E8590C" font-weight="bold">calculate</text>
+  <text x="200" y="284" font-size="14" fill="#1A1B1E">arithmetic expression</text>
+  <text x="40" y="306" font-family="monospace" font-size="14" fill="#E8590C" font-weight="bold">search_faq</text>
+  <text x="200" y="306" font-size="14" fill="#1A1B1E">general support question</text>
+  <text x="40" y="328" font-family="monospace" font-size="14" fill="#343A40" font-weight="bold">none</text>
+  <text x="200" y="328" font-size="14" fill="#1A1B1E">no tool fits</text>
+
+  <!-- Arrow between panels -->
+  <line x1="442" y1="190" x2="478" y2="190" stroke="#E8590C" stroke-width="2.5" marker-end="url(#jd-orange)"/>
+
+  <!-- Right: returns -->
+  <rect x="460" y="20" width="420" height="352" rx="12" fill="#FFFFFF" stroke="#343A40" stroke-width="1.5"/>
+  <text x="480" y="54" font-size="18" font-weight="bold" fill="#1A1B1E">Jev returns</text>
+
+  <text x="480" y="88" font-size="15" font-weight="bold" fill="#1A1B1E">choice</text>
+  <text x="480" y="116" font-family="monospace" font-size="20" font-weight="bold" fill="#1A1B1E">get_weather</text>
+  <text x="480" y="142" font-size="14" fill="#1A1B1E">confidence 0.93</text>
+
+  <text x="480" y="176" font-size="15" font-weight="bold" fill="#1A1B1E">probabilities (illustrative)</text>
+  <text x="480" y="206" font-family="monospace" font-size="14" fill="#1A1B1E">get_weather</text>
+  <rect x="620" y="194" width="200" height="14" rx="7" fill="#FFE8CC"/>
+  <rect x="620" y="194" width="186" height="14" rx="7" fill="#E8590C"/>
+  <text x="836" y="207" text-anchor="end" font-size="14" fill="#1A1B1E">0.93</text>
+
+  <text x="480" y="232" font-family="monospace" font-size="14" fill="#1A1B1E">get_order</text>
+  <rect x="620" y="220" width="200" height="14" rx="7" fill="#FFE8CC"/>
+  <rect x="620" y="220" width="4" height="14" rx="2" fill="#E8590C"/>
+  <text x="836" y="233" text-anchor="end" font-size="14" fill="#1A1B1E">0.02</text>
+
+  <text x="480" y="258" font-family="monospace" font-size="14" fill="#1A1B1E">calculate</text>
+  <rect x="620" y="246" width="200" height="14" rx="7" fill="#FFE8CC"/>
+  <rect x="620" y="246" width="2" height="14" rx="1" fill="#E8590C"/>
+  <text x="836" y="259" text-anchor="end" font-size="14" fill="#1A1B1E">0.01</text>
+
+  <text x="480" y="284" font-family="monospace" font-size="14" fill="#1A1B1E">search_faq</text>
+  <rect x="620" y="272" width="200" height="14" rx="7" fill="#FFE8CC"/>
+  <rect x="620" y="272" width="4" height="14" rx="2" fill="#E8590C"/>
+  <text x="836" y="285" text-anchor="end" font-size="14" fill="#1A1B1E">0.02</text>
+
+  <text x="480" y="310" font-family="monospace" font-size="14" fill="#1A1B1E">none</text>
+  <rect x="620" y="298" width="200" height="14" rx="7" fill="#FFE8CC"/>
+  <rect x="620" y="298" width="4" height="14" rx="2" fill="#E8590C"/>
+  <text x="836" y="311" text-anchor="end" font-size="14" fill="#1A1B1E">0.02</text>
+
+  <text x="480" y="338" font-size="14" fill="#1A1B1E">Code runs only the chosen option.</text>
+  <text x="480" y="358" font-size="14" fill="#1A1B1E">An option outside the criteria is rejected.</text>
+
+  <!-- Bottom: follow-up Choice for the city -->
+  <rect x="20" y="380" width="860" height="64" rx="12" fill="#FFFFFF" stroke="#E8590C" stroke-width="1.5"/>
+  <text x="40" y="408" font-size="15" font-weight="bold" fill="#1A1B1E">Second Choice for get_weather</text>
+  <text x="40" y="430" font-size="14" fill="#1A1B1E">Options: the six cities plus none. Example answer: Madrid. The code then runs get_weather with city Madrid.</text>
+</svg>

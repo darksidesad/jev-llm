@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 480" role="img" aria-labelledby="arch-title arch-desc">
+  <title id="arch-title">jev-llm architecture</title>
+  <desc id="arch-desc">The browser React UI calls the Hono backend under /api. The backend calls the OpenRouter chat API, the OpenRouter Decisions API, and runs the in-process mock tools.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#343A40"/>
+    </marker>
+    <marker id="arrow-jev" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#E8590C"/>
+    </marker>
+    <marker id="arrow-native" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B5BDB"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="480" rx="16" fill="#F8F9FA"/>
+
+  <!-- Browser -->
+  <rect x="30" y="170" width="200" height="120" rx="12" fill="#FFFFFF" stroke="#343A40" stroke-width="2"/>
+  <text x="130" y="206" text-anchor="middle" font-size="18" font-weight="bold" fill="#1A1B1E">Browser</text>
+  <text x="130" y="234" text-anchor="middle" font-size="15" fill="#1A1B1E">React UI (Vite)</text>
+  <text x="130" y="258" text-anchor="middle" font-size="14" fill="#343A40">Compare and Benchmark</text>
+
+  <!-- Backend -->
+  <rect x="330" y="170" width="200" height="120" rx="12" fill="#FFFFFF" stroke="#343A40" stroke-width="2"/>
+  <text x="430" y="206" text-anchor="middle" font-size="18" font-weight="bold" fill="#1A1B1E">Backend</text>
+  <text x="430" y="234" text-anchor="middle" font-size="15" fill="#1A1B1E">Hono on port 3001</text>
+  <text x="430" y="258" text-anchor="middle" font-size="14" fill="#343A40">holds OPENROUTER_KEY</text>
+
+  <!-- OpenRouter chat -->
+  <rect x="640" y="40" width="230" height="110" rx="12" fill="#FFFFFF" stroke="#3B5BDB" stroke-width="2"/>
+  <text x="755" y="76" text-anchor="middle" font-size="17" font-weight="bold" fill="#1A1B1E">OpenRouter chat API</text>
+  <text x="755" y="104" text-anchor="middle" font-size="14" fill="#1A1B1E">LLMs (native and answers)</text>
+  <text x="755" y="126" text-anchor="middle" font-size="14" fill="#343A40">/api/v1/chat/completions</text>
+
+  <!-- OpenRouter Decisions -->
+  <rect x="640" y="330" width="230" height="110" rx="12" fill="#FFFFFF" stroke="#E8590C" stroke-width="2"/>
+  <text x="755" y="366" text-anchor="middle" font-size="17" font-weight="bold" fill="#1A1B1E">OpenRouter Decisions</text>
+  <text x="755" y="394" text-anchor="middle" font-size="14" fill="#1A1B1E">Jev (~typesafe/jev-latest)</text>
+  <text x="755" y="416" text-anchor="middle" font-size="14" fill="#343A40">/api/alpha/decisions</text>
+
+  <!-- Mock tools -->
+  <rect x="330" y="350" width="200" height="100" rx="12" fill="#FFFFFF" stroke="#343A40" stroke-width="2" stroke-dasharray="6 4"/>
+  <text x="430" y="384" text-anchor="middle" font-size="17" font-weight="bold" fill="#1A1B1E">Mock tools</text>
+  <text x="430" y="410" text-anchor="middle" font-size="14" fill="#1A1B1E">get_order, get_weather,</text>
+  <text x="430" y="432" text-anchor="middle" font-size="14" fill="#1A1B1E">calculate, search_faq</text>
+
+  <!-- Browser to backend -->
+  <line x1="230" y1="230" x2="328" y2="230" stroke="#343A40" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="279" y="218" text-anchor="middle" font-size="14" fill="#1A1B1E">/api</text>
+
+  <!-- Backend to chat (native) -->
+  <path d="M 530 200 L 600 200 L 600 110 L 638 110" fill="none" stroke="#3B5BDB" stroke-width="2.5" marker-end="url(#arrow-native)"/>
+
+  <!-- Backend to Decisions (Jev) -->
+  <path d="M 530 260 L 600 260 L 600 380 L 638 380" fill="none" stroke="#E8590C" stroke-width="2.5" marker-end="url(#arrow-jev)"/>
+  <text x="604" y="318" font-size="14" fill="#1A1B1E">Jev decisions</text>
+
+  <!-- Backend to tools -->
+  <line x1="430" y1="290" x2="430" y2="348" stroke="#343A40" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="440" y="324" font-size="14" fill="#1A1B1E">runTool()</text>
+
+  <!-- Legend -->
+  <rect x="30" y="330" width="16" height="16" rx="3" fill="#3B5BDB"/>
+  <text x="54" y="344" font-size="14" fill="#1A1B1E">Native path (A)</text>
+  <rect x="30" y="356" width="16" height="16" rx="3" fill="#E8590C"/>
+  <text x="54" y="370" font-size="14" fill="#1A1B1E">Jev path (B)</text>
+  <text x="30" y="414" font-size="14" fill="#343A40">Only the backend holds the key.</text>
+  <text x="30" y="436" font-size="14" fill="#343A40">Browser calls never reach OpenRouter.</text>
+</svg>

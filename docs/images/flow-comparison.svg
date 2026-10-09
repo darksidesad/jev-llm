@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 390" role="img" aria-labelledby="flow-title flow-desc">
+  <title id="flow-title">Native path and Jev path compared</title>
+  <desc id="flow-desc">Two lanes. Native path: question, LLM picks the tool and writes arguments, run tool, LLM answers. Jev path: question, Jev Choice picks the tool, argument resolution by Choice or regex, run tool, LLM answers from the tool result only. Timed stages are decision, tool and answer.</desc>
+  <defs>
+    <marker id="fa-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#3B5BDB"/>
+    </marker>
+    <marker id="fa-orange" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#E8590C"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="900" height="390" rx="16" fill="#F8F9FA"/>
+
+  <!-- Native lane -->
+  <text x="20" y="34" font-size="18" font-weight="bold" fill="#3B5BDB">Native path (A)</text>
+  <rect x="200" y="46" width="330" height="26" rx="13" fill="#DBE4FF" stroke="#3B5BDB" stroke-width="1.5"/>
+  <text x="365" y="64" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">decision (decisionMs)</text>
+  <rect x="560" y="46" width="150" height="26" rx="13" fill="#DBE4FF" stroke="#3B5BDB" stroke-width="1.5"/>
+  <text x="635" y="64" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">tool (toolMs)</text>
+  <rect x="740" y="46" width="140" height="26" rx="13" fill="#DBE4FF" stroke="#3B5BDB" stroke-width="1.5"/>
+  <text x="810" y="64" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">answer (llmMs)</text>
+
+  <rect x="20" y="82" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#343A40" stroke-width="1.5"/>
+  <text x="95" y="116" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Question</text>
+  <text x="95" y="140" text-anchor="middle" font-size="14" fill="#343A40">user text</text>
+
+  <rect x="200" y="82" width="330" height="80" rx="10" fill="#FFFFFF" stroke="#3B5BDB" stroke-width="2"/>
+  <text x="365" y="116" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">LLM picks the tool</text>
+  <text x="365" y="140" text-anchor="middle" font-size="14" fill="#1A1B1E">and writes its arguments</text>
+
+  <rect x="560" y="82" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#3B5BDB" stroke-width="2"/>
+  <text x="635" y="116" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Run tool</text>
+  <text x="635" y="140" text-anchor="middle" font-size="14" fill="#1A1B1E">mock data</text>
+
+  <rect x="740" y="82" width="140" height="80" rx="10" fill="#FFFFFF" stroke="#3B5BDB" stroke-width="2"/>
+  <text x="810" y="116" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">LLM answers</text>
+  <text x="810" y="140" text-anchor="middle" font-size="14" fill="#1A1B1E">writes the reply</text>
+
+  <line x1="170" y1="122" x2="198" y2="122" stroke="#3B5BDB" stroke-width="2" marker-end="url(#fa-blue)"/>
+  <line x1="530" y1="122" x2="558" y2="122" stroke="#3B5BDB" stroke-width="2" marker-end="url(#fa-blue)"/>
+  <line x1="710" y1="122" x2="738" y2="122" stroke="#3B5BDB" stroke-width="2" marker-end="url(#fa-blue)"/>
+
+  <!-- Jev lane -->
+  <text x="20" y="200" font-size="18" font-weight="bold" fill="#E8590C">Jev path (B)</text>
+  <rect x="200" y="212" width="330" height="26" rx="13" fill="#FFE8CC" stroke="#E8590C" stroke-width="1.5"/>
+  <text x="365" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">decision (decisionMs)</text>
+  <rect x="560" y="212" width="150" height="26" rx="13" fill="#FFE8CC" stroke="#E8590C" stroke-width="1.5"/>
+  <text x="635" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">tool (toolMs)</text>
+  <rect x="740" y="212" width="140" height="26" rx="13" fill="#FFE8CC" stroke="#E8590C" stroke-width="1.5"/>
+  <text x="810" y="230" text-anchor="middle" font-size="14" font-weight="bold" fill="#1A1B1E">answer (llmMs)</text>
+
+  <rect x="20" y="248" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#343A40" stroke-width="1.5"/>
+  <text x="95" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Question</text>
+  <text x="95" y="306" text-anchor="middle" font-size="14" fill="#343A40">user text</text>
+
+  <rect x="200" y="248" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#E8590C" stroke-width="2"/>
+  <text x="275" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Jev Choice</text>
+  <text x="275" y="306" text-anchor="middle" font-size="14" fill="#1A1B1E">picks the tool</text>
+
+  <rect x="380" y="248" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#E8590C" stroke-width="2"/>
+  <text x="455" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Arguments</text>
+  <text x="455" y="306" text-anchor="middle" font-size="14" fill="#1A1B1E">Choice or regex</text>
+
+  <rect x="560" y="248" width="150" height="80" rx="10" fill="#FFFFFF" stroke="#E8590C" stroke-width="2"/>
+  <text x="635" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">Run tool</text>
+  <text x="635" y="306" text-anchor="middle" font-size="14" fill="#1A1B1E">mock data</text>
+
+  <rect x="740" y="248" width="140" height="80" rx="10" fill="#FFFFFF" stroke="#E8590C" stroke-width="2"/>
+  <text x="810" y="282" text-anchor="middle" font-size="15" font-weight="bold" fill="#1A1B1E">LLM answers</text>
+  <text x="810" y="306" text-anchor="middle" font-size="14" fill="#1A1B1E">from the result</text>
+
+  <line x1="170" y1="288" x2="198" y2="288" stroke="#E8590C" stroke-width="2" marker-end="url(#fa-orange)"/>
+  <line x1="350" y1="288" x2="378" y2="288" stroke="#E8590C" stroke-width="2" marker-end="url(#fa-orange)"/>
+  <line x1="530" y1="288" x2="558" y2="288" stroke="#E8590C" stroke-width="2" marker-end="url(#fa-orange)"/>
+  <line x1="710" y1="288" x2="738" y2="288" stroke="#E8590C" stroke-width="2" marker-end="url(#fa-orange)"/>
+
+  <text x="20" y="366" font-size="14" fill="#343A40">Total time covers all three timed stages. The question and the arrows are not timed.</text>
+</svg>

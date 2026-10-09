@@ -128,7 +128,7 @@ export async function runPathB(input: RunInput, deps: Deps & { decider?: Decider
       { role: "system", content: ANSWER_SYSTEM_PROMPT },
       {
         role: "user",
-        content: `Question: ${question}\nTool: ${decision.tool ?? "none"}\nTool result JSON: ${JSON.stringify(toolResult)}`,
+        content: `Question: ${question}\nTool used: ${decision.tool ?? "none"}\nFacts from the tool:\n${toFacts(toolResult)}`,
       },
     ]);
     timings.llmMs = SINCE(t);

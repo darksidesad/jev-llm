@@ -103,7 +103,7 @@ test("path B runs the decided tool and answers from its result only", async () =
   assert.deepEqual(res.probabilities, { get_order: 0.98, none: 0.02 });
   assert.equal(res.answer, "Shipped, arriving 2026-10-11.");
   assert.equal(messages[0].role, "system");
-  assert.match(messages[1].content ?? "", /"orderId":"A1001"/);
+  assert.match(messages[1].content ?? "", /- orderId: A1001/);
   assert.equal(typeof res.timings.decisionMs, "number");
 });
 
@@ -119,7 +119,7 @@ test("path B with no tool sends a null tool result to the answering model", asyn
     runTool,
   });
   assert.equal(res.toolResult, null);
-  assert.match(userMessage, /Tool: none/);
+  assert.match(userMessage, /Tool used: none/);
   assert.equal(res.answer, "I cannot help with that.");
 });
 
