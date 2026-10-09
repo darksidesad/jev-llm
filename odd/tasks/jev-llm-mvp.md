@@ -11,7 +11,7 @@ Delivery: local git, conventional commits, no AI attribution. Branch: main (new 
 - [x] T3 Mock tools (get_order, get_weather, calculate, search_faq) + benchmark dataset (~20 q)
 - [x] T4 Path A: POST /api/run/a
 - [x] T5 Path B: POST /api/run/b (Jev Choice, arg resolution, answer from tool result only)
-- [ ] T6 Frontend: side-by-side UI, selectors, timings (frontend-design skill)
+- [x] T6 Frontend: side-by-side UI, selectors, timings (frontend-design skill)
 - [ ] T7 Benchmark runner + accuracy + LLM judge + results table
 - [ ] T8 Clef adapter stub, final real-key tests, README run steps
 
@@ -19,5 +19,6 @@ Delivery: local git, conventional commits, no AI attribution. Branch: main (new 
 T1-T3: haiku writer (delegated, mapping+write trigger). npm test 14/14 pass, build ok, /api/models 469 models (401 tools, 19 free) verified by me+haiku.
 
 ## Next
-T6
+T7
 T4-T5: haiku writer. 29\/29 tests, build ok, live smoke A+B with free model: Jev decision ~0.5s vs A first call 4-7s. Known gap: calc with number words -> missing_data.
+T6: haiku writer + 1 fix round. Browser-verified: runs both paths, bars 87%/100% on shared scale, default model openai/gpt-oss-20b (free default got 429).
