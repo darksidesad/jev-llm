@@ -1,5 +1,9 @@
 # jev-llm
 
+The core idea: a small model without native tool calling (for example `cohere/command-r7b-12-2024`, a 7B model; models around 1B follow the facts too poorly) cannot call tools by itself. Jev picks the tool and its arguments, and code runs it, so the small model gets tool use anyway.
+
+To try it, pick the same no-tools model on both paths (tick "Use the same model on both paths"). Path A then fails because the model has no native tool calling, and path B still answers from the real tool result.
+
 A small web app that compares two ways of answering a customer question that needs a tool:
 
 - **Path A (baseline):** an LLM with native tool calling picks the tool, writes its arguments, and answers.

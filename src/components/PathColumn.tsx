@@ -28,8 +28,13 @@ export function PathColumn({ path, title, models, model, onModelChange, state }:
           models={models}
           value={model}
           onChange={onModelChange}
-          toolsRequired={path === "A"}
+          initialFilter={path === "A" ? "with" : "without"}
         />
+      )}
+      {models && path === "A" && models.find((m) => m.id === model)?.tools === false && (
+        <p className="notice">
+          This model has no native tool calling, so path A is expected to fail. Path B can still use it.
+        </p>
       )}
       <div className="column-body" aria-live="polite">
         <Body path={path} state={state} />
@@ -67,6 +72,8 @@ function RunningNote({ startedAt }: { startedAt: number }) {
 
 function ErrorNote({ path, message, timings }: { path: "A" | "B"; message: string; timings: Timings }) {
   const rateLimited = /429|rate.?limit/i.test(message);
+  // Path A sends tools; OpenRouter answers a model without tool support with an endpoints/tool error.
+  const noToolSupport = path === "A" && /tool|endpoints?/i.test(message);
   return (
     <div className="error">
       <p className="error-title">
@@ -76,7 +83,9 @@ function ErrorNote({ path, message, timings }: { path: "A" | "B"; message: strin
       <p>
         {rateLimited
           ? "This model is rate limited. Try another model or run again in a moment."
-          : "Try another model, or run again in a moment."}
+          : noToolSupport
+            ? "This model does not support tool calling, so path A cannot run it. Pick a model with tools, or use path B."
+            : "Try another model, or run again in a moment."}
       </p>
     </div>
   );

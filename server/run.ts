@@ -93,10 +93,16 @@ export async function runPathA(input: RunInput, deps: Deps = realDeps) {
 
 // Same style for both paths so the comparison is about who picks the tool, not about answer length.
 const ANSWER_STYLE =
-  "Write a complete, friendly, well-organized answer in the user's language: open with a full sentence that puts the key facts in context (for example 'Right now in Oslo it is cloudy and 6 °C, so a jacket is a good idea'), then, when the result has several fields, a short list. Never output raw JSON or field names.";
+  "Write a complete, friendly, well-organized answer in the user's language: open with one full sentence that states the key facts from the tool result, then, when the result has several fields, a short list. Never output raw JSON or field names.";
+
+// Small models read plain key: value lines far more reliably than raw JSON.
+const toFacts = (v: unknown): string =>
+  v && typeof v === "object"
+    ? Object.entries(v).map(([k, x]) => `- ${k}: ${typeof x === "object" ? JSON.stringify(x) : x}`).join("\n")
+    : String(v);
 
 const ANSWER_SYSTEM_PROMPT = [
-  "You answer customer questions using only the tool result JSON in the user message. Do not add outside knowledge.",
+  "You answer customer questions using only the facts listed under 'Facts from the tool' in the user message (they are all true and current). Do not add outside knowledge.",
   'If the tool result has error "missing_data", ask the user for the item named in "missing".',
   'If the tool is "none", say you cannot help with that using the available tools.',
   ANSWER_STYLE,

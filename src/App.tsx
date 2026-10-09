@@ -3,7 +3,7 @@ import { ApiError, getModels, runPath, type ModelInfo, type RunState } from "./a
 import { BenchmarkView } from "./components/BenchmarkView";
 import { PathColumn } from "./components/PathColumn";
 import { RaceStrip } from "./components/RaceStrip";
-import { defaultModelId } from "./defaultModel";
+import { defaultModelA, defaultModelB } from "./defaultModel";
 
 type Tab = "compare" | "benchmark";
 const TABS: { id: Tab; label: string }[] = [
@@ -13,6 +13,7 @@ const TABS: { id: Tab; label: string }[] = [
 
 const EXAMPLES = ["Where is my order A1001?", "What is the weather in Madrid right now?", "What is 12 * (3 + 4)?"];
 const STORAGE_KEYS = { a: "jev-llm.model.a", b: "jev-llm.model.b" } as const;
+const SAME_MODEL_KEY = "jev-llm.same-model";
 const IDLE: RunState = { status: "idle" };
 
 function readStored(key: string): string | null {
@@ -31,9 +32,9 @@ function writeStored(key: string, value: string) {
   }
 }
 
-// A stored choice is kept only while it is in the list and allowed for its path.
-function resolveModel(models: ModelInfo[], stored: string | null, needTools: boolean, fallback: string): string {
-  return stored !== null && models.some((m) => m.id === stored && (!needTools || m.tools)) ? stored : fallback;
+// A stored choice is kept only while it is still in the list; otherwise the path default applies.
+function resolveModel(models: ModelInfo[], stored: string | null, fallback: string): string {
+  return stored !== null && models.some((m) => m.id === stored) ? stored : fallback;
 }
 
 const settled = (s: RunState) => s.status === "done" || s.status === "error";
@@ -43,6 +44,7 @@ export default function App() {
   const [modelsError, setModelsError] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
   const [stored, setStored] = useState(() => ({ a: readStored(STORAGE_KEYS.a), b: readStored(STORAGE_KEYS.b) }));
+  const [sameModel, setSameModel] = useState(() => readStored(SAME_MODEL_KEY) === "1");
   const [colA, setColA] = useState<RunState>(IDLE);
   const [colB, setColB] = useState<RunState>(IDLE);
   const [runId, setRunId] = useState(0);
@@ -54,15 +56,29 @@ export default function App() {
   }, []);
 
   const list = models ?? [];
-  const defaultModel = defaultModelId(list);
-  const modelA = resolveModel(list, stored.a, true, defaultModel);
-  const modelB = resolveModel(list, stored.b, false, defaultModel);
+  const modelA = resolveModel(list, stored.a, defaultModelA(list));
+  const modelB = resolveModel(list, stored.b, defaultModelB(list));
   const running = colA.status === "running" || colB.status === "running";
   const canRun = list.length > 0 && question.trim() !== "" && !running;
 
+  // With "same model" on, a pick in either picker sets both paths.
   const pickModel = (path: "a" | "b") => (id: string) => {
-    setStored((s) => (path === "a" ? { ...s, a: id } : { ...s, b: id }));
-    writeStored(STORAGE_KEYS[path], id);
+    const targets = sameModel ? (["a", "b"] as const) : [path];
+    setStored((s) => ({
+      a: targets.includes("a") ? id : s.a,
+      b: targets.includes("b") ? id : s.b,
+    }));
+    targets.forEach((p) => writeStored(STORAGE_KEYS[p], id));
+  };
+
+  // Turning it on copies the path A model to path B, so both paths show the same model at once.
+  const toggleSameModel = (on: boolean) => {
+    setSameModel(on);
+    writeStored(SAME_MODEL_KEY, on ? "1" : "0");
+    if (on) {
+      setStored((s) => ({ ...s, b: modelA }));
+      writeStored(STORAGE_KEYS.b, modelA);
+    }
   };
 
   // Each column settles on its own; a result from an older run is dropped.
@@ -167,6 +183,11 @@ export default function App() {
       {!models && !modelsError && <p className="notice">Loading models...</p>}
 
       <div aria-live="polite">{settled(colA) && settled(colB) && <RaceStrip key={runId} a={colA} b={colB} />}</div>
+
+      <label className="same-model">
+        <input type="checkbox" checked={sameModel} onChange={(e) => toggleSameModel(e.target.checked)} />
+        Use the same model on both paths
+      </label>
 
       <div className="columns">
         <PathColumn

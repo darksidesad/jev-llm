@@ -23,7 +23,8 @@ export function toModelInfo(m: RawModel): ModelInfo {
     id: m.id,
     name: m.name,
     tools: m.supported_parameters?.includes("tools") ?? false,
-    free: m.id.endsWith(":free") || (promptPrice === 0 && completionPrice === 0),
+    // Negative prices mark variable-cost routers: never free.
+    free: promptPrice >= 0 && completionPrice >= 0 && (m.id.endsWith(":free") || (promptPrice === 0 && completionPrice === 0)),
     promptPrice,
     completionPrice,
     contextLength: m.context_length,

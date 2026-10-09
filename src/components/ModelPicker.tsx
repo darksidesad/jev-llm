@@ -1,19 +1,30 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { ModelInfo } from "../api";
+import { isVariable } from "../defaultModel";
+
+export type ToolsFilter = "any" | "with" | "without";
+
+const FILTERS: { id: ToolsFilter; label: string }[] = [
+  { id: "any", label: "Any" },
+  { id: "with", label: "With tools" },
+  { id: "without", label: "Without tools" },
+];
 
 type Props = {
   label: string;
   models: ModelInfo[];
   value: string;
   onChange: (id: string) => void;
-  toolsRequired: boolean;
+  initialFilter?: ToolsFilter;
 };
 
 const money = (n: number) => (n < 0.1 ? `$${n.toFixed(3)}` : `$${n.toFixed(2)}`);
-const priceText = (m: ModelInfo) =>
-  m.free ? "free" : `${money(m.promptPrice)} in, ${money(m.completionPrice)} out per 1M`;
+const priceText = (m: ModelInfo) => {
+  if (isVariable(m)) return "varies";
+  return m.free ? "free" : `${money(m.promptPrice)} in, ${money(m.completionPrice)} out per 1M`;
+};
 
-export function ModelPicker({ label, models, value, onChange, toolsRequired }: Props) {
+export function ModelPicker({ label, models, value, onChange, initialFilter = "any" }: Props) {
   const uid = useId();
   const inputId = `${uid}-input`;
   const listId = `${uid}-list`;
@@ -22,16 +33,15 @@ export function ModelPicker({ label, models, value, onChange, toolsRequired }: P
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [freeOnly, setFreeOnly] = useState(false);
-  const [toolsOnly, setToolsOnly] = useState(false);
+  const [filter, setFilter] = useState<ToolsFilter>(initialFilter);
   const [active, setActive] = useState(0);
 
   const selected = models.find((m) => m.id === value);
-  const needTools = toolsRequired || toolsOnly;
   const q = query.trim().toLowerCase();
   const matches = models.filter(
     (m) =>
       (!freeOnly || m.free) &&
-      (!needTools || m.tools) &&
+      (filter === "any" || m.tools === (filter === "with")) &&
       (q === "" || m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)),
   );
   const current = matches.length > 0 ? Math.min(active, matches.length - 1) : -1;
@@ -110,18 +120,23 @@ export function ModelPicker({ label, models, value, onChange, toolsRequired }: P
           />
           Free only
         </label>
-        <label>
-          <input
-            type="checkbox"
-            checked={needTools}
-            disabled={toolsRequired}
-            onChange={(e) => {
-              setToolsOnly(e.target.checked);
-              setActive(0);
-            }}
-          />
-          Tools only
-        </label>
+        <div className="segmented" role="radiogroup" aria-label="Tool calling">
+          {FILTERS.map((f) => (
+            <label key={f.id} className={filter === f.id ? "segment is-on" : "segment"}>
+              <input
+                type="radio"
+                name={`${uid}-tools`}
+                value={f.id}
+                checked={filter === f.id}
+                onChange={() => {
+                  setFilter(f.id);
+                  setActive(0);
+                }}
+              />
+              {f.label}
+            </label>
+          ))}
+        </div>
       </div>
       {open &&
         (matches.length > 0 ? (
@@ -138,6 +153,7 @@ export function ModelPicker({ label, models, value, onChange, toolsRequired }: P
                 onClick={() => choose(m)}
               >
                 <span className="opt-name">{m.name}</span>
+                {!m.tools && <span className="opt-badge">no tools</span>}
                 <span className="opt-id">{m.id}</span>
                 <span className="opt-price num">{priceText(m)}</span>
               </li>

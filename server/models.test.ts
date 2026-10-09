@@ -23,3 +23,9 @@ test("prices are converted to USD per 1M tokens", () => {
   assert.equal(m.completionPrice, 0.6);
   assert.equal(m.contextLength, 8000);
 });
+
+test("negative prices (variable-cost routers) are never free", () => {
+  const router = toModelInfo({ ...base, id: "openrouter/fusion", pricing: { prompt: "-1", completion: "-1" } });
+  assert.equal(router.free, false);
+  assert.equal(router.promptPrice, -1000000);
+});

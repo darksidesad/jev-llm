@@ -705,3 +705,59 @@ pre {
 .mark-miss {
   color: var(--error);
 }
+
+/* Tool calling filter, badges, same-model toggle */
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.segment {
+  position: relative;
+  padding: 4px 10px;
+  color: var(--muted);
+  background: var(--surface);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.segment + .segment {
+  border-left: 1px solid var(--line);
+}
+
+.segment.is-on {
+  color: var(--ink);
+  background: var(--hover);
+  font-weight: 600;
+}
+
+.segment input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segment:focus-within {
+  outline: 3px solid var(--ink);
+  outline-offset: -3px;
+}
+
+.opt-badge {
+  margin-left: 8px;
+  padding: 0 6px;
+  font-size: 0.75rem;
+  color: var(--error);
+  border: 1px solid var(--error);
+  border-radius: 4px;
+}
+
+.same-model {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  cursor: pointer;
+}

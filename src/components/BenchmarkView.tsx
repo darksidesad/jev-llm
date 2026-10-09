@@ -8,7 +8,7 @@ import {
   type ModelInfo,
   type PathBench,
 } from "../api";
-import { defaultModelId } from "../defaultModel";
+import { defaultJudge, defaultModelA, defaultModelB } from "../defaultModel";
 import { formatMs } from "../format";
 import { ModelPicker } from "./ModelPicker";
 
@@ -67,13 +67,12 @@ export function BenchmarkView({ models, modelsError }: Props) {
   }, []);
 
   const list = models ?? [];
-  const fallback = defaultModelId(list);
-  // A pick is kept only while it is in the list and allowed for its role (path A needs tools).
-  const choose = (pick: string | undefined, needTools: boolean) =>
-    pick !== undefined && list.some((m) => m.id === pick && (!needTools || m.tools)) ? pick : fallback;
-  const modelA = choose(picks.a, true);
-  const modelB = choose(picks.b, false);
-  const judge = choose(picks.judge, false);
+  // A pick is kept only while it is still in the list; otherwise the role's default applies.
+  const choose = (pick: string | undefined, fallback: string) =>
+    pick !== undefined && list.some((m) => m.id === pick) ? pick : fallback;
+  const modelA = choose(picks.a, defaultModelA(list));
+  const modelB = choose(picks.b, defaultModelB(list));
+  const judge = choose(picks.judge, defaultJudge(list));
   const canRun = items !== null && items.length > 0 && list.length > 0 && !running;
 
   const setRow = (id: string, row: Row | null) =>
@@ -133,25 +132,24 @@ export function BenchmarkView({ models, modelsError }: Props) {
       {models && (
         <div className="bench-pickers">
           <ModelPicker
-            label="Path A model (tools only)"
+            label="Path A model"
             models={models}
             value={modelA}
             onChange={(id) => setPicks((p) => ({ ...p, a: id }))}
-            toolsRequired
+            initialFilter="with"
           />
           <ModelPicker
             label="Path B model"
             models={models}
             value={modelB}
             onChange={(id) => setPicks((p) => ({ ...p, b: id }))}
-            toolsRequired={false}
+            initialFilter="without"
           />
           <ModelPicker
             label="Judge model"
             models={models}
             value={judge}
             onChange={(id) => setPicks((p) => ({ ...p, judge: id }))}
-            toolsRequired={false}
           />
         </div>
       )}
