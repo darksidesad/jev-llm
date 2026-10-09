@@ -19,7 +19,7 @@ Delivery: local git, conventional commits, no AI attribution. Branch: main (new 
 T1-T3: haiku writer (delegated, mapping+write trigger). npm test 14/14 pass, build ok, /api/models 469 models (401 tools, 19 free) verified by me+haiku.
 
 ## Next
-Done: final review (extra round: no-tools models in B, answer style, defaults)
+Done: final review. Extra rounds: no-tools models in B; N contenders (1-4, native or Jev, any model each) in Compare + Benchmark. Browser-verified 3 contenders run in parallel.
 T4-T5: haiku writer. 29\/29 tests, build ok, live smoke A+B with free model: Jev decision ~0.5s vs A first call 4-7s. Known gap: calc with number words -> missing_data.
 T6: haiku writer + 1 fix round. Browser-verified: runs both paths, bars 87%/100% on shared scale, default model openai/gpt-oss-20b (free default got 429).
 T7-T8: haiku writer. 42/42 tests, build ok, live UI benchmark run in browser. Clef: README section only, no stub (ponytail).

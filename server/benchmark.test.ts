@@ -1,6 +1,9 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { argsCorrect, parseJudgeScores, toolCorrect } from "./benchmark";
+import { argsCorrect, parseBenchmarkRequest, parseJudgeScores, runBenchmarkItem, toolCorrect } from "./benchmark";
+import type { RunInput } from "./run";
+
+type Deps = NonNullable<Parameters<typeof runBenchmarkItem>[1]>;
 
 const run = (tool: string | null, args: Record<string, unknown> | null, toolResult: unknown = {}) => ({ tool, args, toolResult });
 
@@ -66,4 +69,44 @@ test("parseJudgeScores returns an error when there is no usable JSON object", ()
   assert.ok("error" in parseJudgeScores("I think the answer is good."));
   assert.ok("error" in parseJudgeScores('{"clarity": 4}'));
   assert.ok("error" in parseJudgeScores("{not json}"));
+});
+
+test("parseBenchmarkRequest accepts 1 to 4 contenders with unique ids", () => {
+  const c = (id: string, mode = "native") => ({ id, mode, model: "m" });
+  const body = (contenders: unknown[]) => ({ itemId: "order-01", contenders, judgeModel: "j" });
+  assert.equal(parseBenchmarkRequest(body([c("1")])).contenders.length, 1);
+  assert.equal(parseBenchmarkRequest(body([c("1"), c("2", "jev"), c("3"), c("4")])).contenders.length, 4);
+  assert.throws(() => parseBenchmarkRequest(body([])));
+  assert.throws(() => parseBenchmarkRequest(body([c("1"), c("2"), c("3"), c("4"), c("5")])));
+  assert.throws(() => parseBenchmarkRequest(body([c("1", "agent")])));
+  assert.throws(() => parseBenchmarkRequest(body([c("1"), c("1")])));
+});
+
+test("runBenchmarkItem routes each contender by mode and keeps the judge blind to mode and model", async () => {
+  const routed: string[] = [];
+  const judgeInputs: string[] = [];
+  const ok = { tool: "get_order", args: { orderId: "A1001" }, toolResult: { status: "shipped" }, answer: "shipped", timings: {} };
+  const deps: Deps = {
+    runA: async (input: RunInput) => (routed.push(`native:${input.model}`), ok),
+    runB: async (input: RunInput) => (routed.push(`jev:${input.model}`), ok),
+    chat: async (_model, messages) => {
+      judgeInputs.push(JSON.stringify(messages));
+      return { choices: [{ message: { role: "assistant", content: '{"clarity": 4, "faithfulness": 5}' }, finish_reason: null }] };
+    },
+  };
+  const res = await runBenchmarkItem(
+    {
+      itemId: "order-01",
+      contenders: [
+        { id: "x", mode: "native", model: "m-native" },
+        { id: "y", mode: "jev", model: "m-jev" },
+      ],
+      judgeModel: "judge-model",
+    },
+    deps,
+  );
+  assert.deepEqual(routed.sort(), ["jev:m-jev", "native:m-native"]);
+  assert.deepEqual(res.results.map((r) => r.contenderId), ["x", "y"]);
+  assert.equal(judgeInputs.length, 2);
+  assert.ok(judgeInputs.every((text) => !/native|jev|m-native|m-jev/i.test(text)));
 });

@@ -5,8 +5,8 @@ export const isVariable = (m: ModelInfo) => m.promptPrice < 0 || m.completionPri
 
 const find = (list: ModelInfo[], pred: (m: ModelInfo) => boolean) => list.find(pred)?.id;
 
-// Path A: the cheap model with native tool calling; any model can still be picked.
-export function defaultModelA(list: ModelInfo[]): string {
+// Native mode: the cheap model with native tool calling; any model can still be picked.
+export function defaultNativeModel(list: ModelInfo[]): string {
   return (
     find(list, (m) => m.id === "openai/gpt-oss-20b") ??
     find(list, (m) => m.free && m.tools) ??
@@ -15,12 +15,12 @@ export function defaultModelA(list: ModelInfo[]): string {
   );
 }
 
-// Path B: a small model without native tool calling, which Jev gives tools to.
-export function defaultModelB(list: ModelInfo[]): string {
+// Jev mode: a small model without native tool calling, which Jev gives tools to.
+export function defaultJevModel(list: ModelInfo[]): string {
   return find(list, (m) => m.id === "cohere/command-r7b-12-2024") ?? find(list, (m) => !m.tools && !isVariable(m)) ?? "";
 }
 
-// Judge: the same cheap tool-capable model as path A.
+// Judge: the same cheap tool-capable model as the native default.
 export function defaultJudge(list: ModelInfo[]): string {
-  return find(list, (m) => m.id === "openai/gpt-oss-20b") ?? defaultModelA(list);
+  return find(list, (m) => m.id === "openai/gpt-oss-20b") ?? defaultNativeModel(list);
 }

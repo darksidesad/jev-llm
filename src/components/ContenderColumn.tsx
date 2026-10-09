@@ -1,58 +1,47 @@
 import { useEffect, useState } from "react";
-import type { ModelInfo, RunResult, RunState, Timings } from "../api";
+import type { Contender, Mode, ModelInfo, RunResult, RunState, Timings } from "../api";
+import { pathClassOf } from "../contenders";
 import { formatMs, plainAnswer } from "../format";
-import { ModelPicker } from "./ModelPicker";
+import { ContenderEditor } from "./ContenderEditor";
 
 type Props = {
-  path: "A" | "B";
-  title: string;
-  models: ModelInfo[] | null;
-  model: string;
-  onModelChange: (id: string) => void;
+  index: number;
+  contender: Contender;
+  models: ModelInfo[];
+  canRemove: boolean;
   state: RunState;
+  onChange: (next: Contender) => void;
+  onRemove: () => void;
 };
 
-export function PathColumn({ path, title, models, model, onModelChange, state }: Props) {
-  const headingId = `column-${path}-heading`;
+export function ContenderColumn({ index, contender, models, canRemove, state, onChange, onRemove }: Props) {
   return (
-    <section className={`column path-${path.toLowerCase()}`} aria-labelledby={headingId}>
-      <h2 id={headingId} className="column-title">
-        <span className="path-letter" aria-hidden="true">
-          {path}
-        </span>
-        {title}
-      </h2>
-      {models && (
-        <ModelPicker
-          label="Model"
-          models={models}
-          value={model}
-          onChange={onModelChange}
-          initialFilter={path === "A" ? "with" : "without"}
-        />
-      )}
-      {models && path === "A" && models.find((m) => m.id === model)?.tools === false && (
-        <p className="notice">
-          This model has no native tool calling, so path A is expected to fail. Path B can still use it.
-        </p>
-      )}
+    <section className={`column ${pathClassOf(contender.mode)}`} aria-label={`Contender ${index + 1}`}>
+      <ContenderEditor
+        index={index}
+        contender={contender}
+        models={models}
+        canRemove={canRemove}
+        onChange={onChange}
+        onRemove={onRemove}
+      />
       <div className="column-body" aria-live="polite">
-        <Body path={path} state={state} />
+        <Body mode={contender.mode} state={state} />
       </div>
     </section>
   );
 }
 
-function Body({ path, state }: { path: "A" | "B"; state: RunState }) {
+function Body({ mode, state }: { mode: Mode; state: RunState }) {
   switch (state.status) {
     case "idle":
-      return <p className="empty">Run both paths to see this path's tool choice, timings and answer.</p>;
+      return <p className="empty">Run to see this contender's tool choice, timings and answer.</p>;
     case "running":
       return <RunningNote startedAt={state.startedAt} />;
     case "error":
-      return <ErrorNote path={path} message={state.message} timings={state.timings} />;
+      return <ErrorNote mode={mode} message={state.message} timings={state.timings} />;
     case "done":
-      return <Outcome path={path} result={state.result} />;
+      return <Outcome mode={mode} result={state.result} />;
   }
 }
 
@@ -70,28 +59,28 @@ function RunningNote({ startedAt }: { startedAt: number }) {
   );
 }
 
-function ErrorNote({ path, message, timings }: { path: "A" | "B"; message: string; timings: Timings }) {
+function ErrorNote({ mode, message, timings }: { mode: Mode; message: string; timings: Timings }) {
   const rateLimited = /429|rate.?limit/i.test(message);
-  // Path A sends tools; OpenRouter answers a model without tool support with an endpoints/tool error.
-  const noToolSupport = path === "A" && /tool|endpoints?/i.test(message);
+  // Native mode sends tools; OpenRouter answers a model without tool support with an endpoints/tool error.
+  const noToolSupport = mode === "native" && /tool|endpoints?/i.test(message);
   return (
     <div className="error">
       <p className="error-title">
-        Path {path} failed{timings.totalMs !== undefined ? ` after ${formatMs(timings.totalMs)}` : ""}.
+        This run failed{timings.totalMs !== undefined ? ` after ${formatMs(timings.totalMs)}` : ""}.
       </p>
       <pre>{message}</pre>
       <p>
         {rateLimited
           ? "This model is rate limited. Try another model or run again in a moment."
           : noToolSupport
-            ? "This model does not support tool calling, so path A cannot run it. Pick a model with tools, or use path B."
+            ? "This model does not support tool calling, so native mode cannot run it. Pick a model with tools, or switch to Jev mode."
             : "Try another model, or run again in a moment."}
       </p>
     </div>
   );
 }
 
-function Outcome({ path, result }: { path: "A" | "B"; result: RunResult }) {
+function Outcome({ mode, result }: { mode: Mode; result: RunResult }) {
   const args = Object.entries(result.args ?? {}).filter(([, value]) => value !== undefined);
   const probabilities = Object.entries(result.probabilities ?? {}).sort(([, a], [, b]) => b - a);
   const t = result.timings;
@@ -108,7 +97,7 @@ function Outcome({ path, result }: { path: "A" | "B"; result: RunResult }) {
       ) : (
         <ul className="args">
           {args.map(([name, value]) => {
-            const source = result.argSource?.[name];
+            const source = mode === "jev" ? result.argSource?.[name] : undefined;
             return (
               <li key={name}>
                 <span className="arg-name">{name}</span>
@@ -120,7 +109,7 @@ function Outcome({ path, result }: { path: "A" | "B"; result: RunResult }) {
         </ul>
       )}
 
-      {path === "B" && probabilities.length > 0 && (
+      {mode === "jev" && probabilities.length > 0 && (
         <>
           <h3>Jev probabilities</h3>
           <ul className="probs">

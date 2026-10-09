@@ -2,14 +2,21 @@
 
 The core idea: a small model without native tool calling (for example `cohere/command-r7b-12-2024`, a 7B model; models around 1B follow the facts too poorly) cannot call tools by itself. Jev picks the tool and its arguments, and code runs it, so the small model gets tool use anyway.
 
-To try it, pick the same no-tools model on both paths (tick "Use the same model on both paths"). Path A then fails because the model has no native tool calling, and path B still answers from the real tool result.
+To try it, add a contender with a no-tools model in native mode and another in Jev mode. The native one fails because the model has no native tool calling, and the Jev one still answers from the real tool result.
 
-A small web app that compares two ways of answering a customer question that needs a tool:
+A small web app that compares ways of answering a customer question that needs a tool. Each **contender** is a model with a mode:
 
-- **Path A (baseline):** an LLM with native tool calling picks the tool, writes its arguments, and answers.
-- **Path B (Jev):** the decision model Jev picks the tool and its arguments, plain code runs the tool, and an LLM answers using only the tool result.
+- **Native mode (path A, baseline):** an LLM with native tool calling picks the tool, writes its arguments, and answers.
+- **Jev mode (path B):** the decision model Jev picks the tool and its arguments, plain code runs the tool, and the chosen LLM answers using only the tool result.
 
-The **Compare** tab runs one question through both paths side by side, with timings. The **Benchmark** tab runs 20 labeled questions through both paths, checks tool and argument accuracy, and has a judge model score clarity and faithfulness.
+The **Compare** tab runs one question through up to four contenders in parallel, with timings. The **Benchmark** tab runs 20 labeled questions through the same contenders, checks tool and argument accuracy, and has a judge model score clarity and faithfulness.
+
+## Usage
+
+- Pick any model and any mode for each contender (1 to 4). Contenders do not share a model. Defaults: `openai/gpt-oss-20b` in native mode, `cohere/command-r7b-12-2024` in Jev mode.
+- "Add contender" copies the last contender's model and takes the opposite mode. Each contender has its own Remove button.
+- Example: "DeepSeek V4 flash" in native mode against "Mistral" in Jev mode. Pick both, type a question, and press Run all (or Ctrl/Cmd+Enter).
+- The contender list is saved in this browser and is still there on the next visit.
 
 ## Setup
 

@@ -19,7 +19,7 @@ export type RunResult = {
   toolResult: unknown;
   answer: string;
   timings: Timings;
-  // Path B only.
+  // Jev mode only.
   deciderModel?: string;
   argSource?: Record<string, "jev" | "code">;
   probabilities?: Record<string, number>;
@@ -81,9 +81,13 @@ export type BenchItemResponse = {
   itemId: string;
   question: string;
   expectedTool: string;
-  a: PathBench;
-  b: PathBench;
+  results: ContenderBench[];
 };
+
+// Mode "native" is path A (the model calls tools itself); "jev" is path B (Jev picks the tool).
+export type Mode = "native" | "jev";
+export type Contender = { id: string; mode: Mode; model: string };
+export type ContenderBench = { contenderId: string } & PathBench;
 
 export async function getBenchmarkItems(): Promise<BenchItem[]> {
   const res = await fetch("/api/benchmark/items");
@@ -93,7 +97,7 @@ export async function getBenchmarkItems(): Promise<BenchItem[]> {
 }
 
 export async function runBenchmarkItem(
-  body: { itemId: string; modelA: string; modelB: string; judgeModel: string },
+  body: { itemId: string; contenders: Contender[]; judgeModel: string },
   signal: AbortSignal,
 ): Promise<BenchItemResponse> {
   const res = await fetch("/api/benchmark/item", {

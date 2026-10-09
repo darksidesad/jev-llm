@@ -1,6 +1,9 @@
-import { useEffect, useState } from "react";
-import type { RunState, Timings } from "../api";
+import { useEffect, useState, type CSSProperties } from "react";
+import type { Mode, RunState, Timings } from "../api";
+import { pathClassOf } from "../contenders";
 import { formatMs } from "../format";
+
+export type RaceEntry = { key: string; label: string; mode: Mode; tone: string; state: RunState };
 
 const timingsOf = (state: RunState): Timings => {
   if (state.status === "done") return state.result.timings;
@@ -8,53 +11,47 @@ const timingsOf = (state: RunState): Timings => {
   return {};
 };
 
-// Both states are settled when this runs. A failed path means there is no race to describe.
-function summarize(a: RunState, b: RunState): string {
-  const failed = [a.status === "error" ? "A" : null, b.status === "error" ? "B" : null].filter(
-    (p): p is "A" | "B" => p !== null,
-  );
-  if (failed.length > 0) return `Path ${failed.join(" and ")} failed, so there is no race result.`;
+// Only runs that returned are ranked; failed ones are named so the missing bars are explained.
+function summarize(entries: RaceEntry[]): string {
+  const ok = entries.flatMap((e) => (e.state.status === "done" ? [{ label: e.label, t: e.state.result.timings }] : []));
+  const failed = entries.filter((e) => e.state.status === "error").map((e) => e.label);
+  const failText = failed.length > 0 ? ` ${failed.length} failed: ${failed.join(", ")}.` : "";
+  if (ok.length === 0) return failed.length > 0 ? "Every contender failed, so there is no race result." : "";
+  if (ok.length === 1) return `${ok[0].label} finished in ${formatMs(ok[0].t.totalMs)}.${failText}`;
 
-  const ta = timingsOf(a);
-  const tb = timingsOf(b);
-  const decA = ta.decisionMs ?? 0;
-  const decB = tb.decisionMs ?? 0;
-  const totA = ta.totalMs ?? 0;
-  const totB = tb.totalMs ?? 0;
-  const ratio = (x: number, y: number) => (Math.max(x, y) / Math.max(Math.min(x, y), 1)).toFixed(1);
-  const decWinner = decA <= decB ? "A" : "B";
-  const totWinner = totA <= totB ? "A" : "B";
-
-  if (decA === decB) return `Both paths chose their tool in ${formatMs(decA)}, and path ${totWinner} finished ${ratio(totA, totB)}x faster overall.`;
-  const head = `Path ${decWinner} chose its tool ${ratio(decA, decB)}x faster (${formatMs(Math.min(decA, decB))} vs ${formatMs(Math.max(decA, decB))})`;
-  return totWinner === decWinner
-    ? `${head} and finished ${ratio(totA, totB)}x faster overall.`
-    : `${head}, but finished ${ratio(totA, totB)}x slower overall.`;
+  const byDecision = ok.reduce((best, x) => ((x.t.decisionMs ?? 0) < (best.t.decisionMs ?? 0) ? x : best));
+  const byTotal = ok.reduce((best, x) => ((x.t.totalMs ?? 0) < (best.t.totalMs ?? 0) ? x : best));
+  const head =
+    byDecision === byTotal
+      ? `${byTotal.label} was fastest at choosing its tool (${formatMs(byDecision.t.decisionMs)}) and fastest overall (${formatMs(byTotal.t.totalMs)}).`
+      : `${byDecision.label} chose its tool fastest (${formatMs(byDecision.t.decisionMs)}), and ${byTotal.label} finished fastest overall (${formatMs(byTotal.t.totalMs)}).`;
+  return head + failText;
 }
 
 // Segment labels appear only when the segment is at least this share of its bar; the title and the stages line always give the value.
 const LABEL_MIN_PERCENT = 22;
 
-export function RaceStrip({ a, b }: { a: RunState; b: RunState }) {
-  const rows = (["A", "B"] as const)
-    .map((path) => ({ path, timings: timingsOf(path === "A" ? a : b) }))
+export function RaceStrip({ entries }: { entries: RaceEntry[] }) {
+  const rows = entries
+    .map((entry) => ({ ...entry, timings: timingsOf(entry.state) }))
     .filter((row) => row.timings.totalMs !== undefined);
   const scale = Math.max(1, ...rows.map((row) => row.timings.totalMs ?? 0));
 
   return (
     <section className="race" aria-label="Timing race">
       {rows.map((row) => (
-        <Bar key={row.path} path={row.path} timings={row.timings} scale={scale} />
+        <Bar key={row.key} row={row} scale={scale} />
       ))}
-      <p className="race-summary">{summarize(a, b)}</p>
+      <p className="race-summary">{summarize(entries)}</p>
       <p className="strip-key">The darkest segment is the decision, the middle one the tool, the lightest the LLM answer.</p>
     </section>
   );
 }
 
-// The bar length is the path's own total on the shared scale. Stage segments split that length in
+// The bar length is the contender's own total on the shared scale. Stage segments split that length in
 // proportion to their time; time not covered by a stage is drawn as the "other" segment.
-function Bar({ path, timings, scale }: { path: "A" | "B"; timings: Timings; scale: number }) {
+function Bar({ row, scale }: { row: RaceEntry & { timings: Timings }; scale: number }) {
+  const { label, timings } = row;
   const [grown, setGrown] = useState(false);
   useEffect(() => {
     const frame = requestAnimationFrame(() => setGrown(true));
@@ -68,16 +65,16 @@ function Bar({ path, timings, scale }: { path: "A" | "B"; timings: Timings; scal
     { kind: "answer", label: "LLM answer", ms: timings.llmMs ?? 0 },
   ];
   const other = Math.max(total - stages.reduce((sum, s) => sum + s.ms, 0), 0);
-  const description = `Path ${path}: ${stages
+  const description = `${label}: ${stages
     .map((s) => `${s.label.toLowerCase()} ${formatMs(s.ms)}`)
     .join(", ")}, total ${formatMs(total)}`;
 
   return (
-    <div className={`bar-block path-${path.toLowerCase()}`}>
+    <div className={`bar-block ${pathClassOf(row.mode)}`} style={{ "--path": row.tone } as CSSProperties}>
+      <p className="bar-label" title={label}>
+        {label}
+      </p>
       <div className="bar-row">
-        <span className="bar-letter" aria-hidden="true">
-          {path}
-        </span>
         <div className="bar-lane">
           <div
             className="bar-fill"

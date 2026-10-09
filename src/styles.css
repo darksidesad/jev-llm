@@ -183,7 +183,7 @@ input::placeholder {
 
 .bar-row {
   display: grid;
-  grid-template-columns: 1.25rem minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
 }
@@ -193,16 +193,17 @@ input::placeholder {
 }
 
 .stages {
-  margin: 4px 0 0 2rem;
+  margin: 4px 0 0;
   font-size: 0.875rem;
   color: var(--muted);
 }
 
-.bar-letter {
-  font-family: "Bricolage Grotesque", Figtree, sans-serif;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--path);
+.bar-label {
+  margin: 0 0 6px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .bar-fill {
@@ -264,8 +265,13 @@ input::placeholder {
 
 .columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  margin-top: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 32px 24px;
+  margin-top: 24px;
+}
+
+.contenders-bar {
+  margin-top: 32px;
 }
 
 .column {
@@ -274,8 +280,15 @@ input::placeholder {
   border-top: 3px solid var(--path);
 }
 
-.column + .column {
-  margin-top: 32px;
+.contender {
+  min-width: 0;
+}
+
+.contender-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .column-title {
@@ -295,29 +308,6 @@ input::placeholder {
   background: var(--path);
   color: var(--on-path);
   font-weight: 700;
-}
-
-@media (min-width: 820px) {
-  .columns {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .column {
-    padding: 24px 24px 0;
-  }
-
-  .column:first-child {
-    padding-left: 0;
-  }
-
-  .column:last-child {
-    padding-right: 0;
-  }
-
-  .column + .column {
-    margin-top: 0;
-    border-left: 1px solid var(--line);
-  }
 }
 
 /* Model picker */
@@ -586,14 +576,9 @@ pre {
 
 .bench-pickers {
   display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
   gap: 16px;
   margin-top: 24px;
-}
-
-@media (min-width: 820px) {
-  .bench-pickers {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 .bench-actions {
@@ -624,7 +609,6 @@ pre {
 }
 
 .bench-summary {
-  margin-top: 24px;
   max-width: 40rem;
 }
 
@@ -706,7 +690,7 @@ pre {
   color: var(--error);
 }
 
-/* Tool calling filter, badges, same-model toggle */
+/* Tool calling filter, badges */
 
 .segmented {
   display: inline-flex;
@@ -754,10 +738,14 @@ pre {
   border-radius: 4px;
 }
 
-.same-model {
+/* Native / Jev mode switch: two equal segments that wrap their text inside a narrow column. */
+.mode-switch {
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 24px;
-  cursor: pointer;
+  margin-top: 20px;
+}
+
+.mode-switch .segment {
+  flex: 1;
+  text-align: center;
+  white-space: normal;
 }

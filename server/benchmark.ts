@@ -10,7 +10,11 @@ export type JudgeResult = JudgeScores | { error: string };
 export type PathBenchmark =
   | { result: PathRun; toolCorrect: boolean; argsCorrect: boolean; judge: JudgeResult }
   | { error: string; toolCorrect: false; argsCorrect: false };
-export type BenchmarkRequest = { itemId: string; modelA: string; modelB: string; judgeModel: string };
+// native = path A (model calls tools itself), jev = path B (Jev picks the tool, the model only answers).
+export type Mode = "native" | "jev";
+export type Contender = { id: string; mode: Mode; model: string };
+export const MAX_CONTENDERS = 4;
+export type BenchmarkRequest = { itemId: string; contenders: Contender[]; judgeModel: string };
 
 type Deps = {
   runA: (input: RunInput) => Promise<PathRun>;
@@ -121,26 +125,40 @@ async function evaluatePath(item: BenchItem, run: Promise<PathRun>, judgeModel: 
   }
 }
 
+function parseContender(value: unknown): Contender {
+  const { id, mode, model } = (typeof value === "object" && value !== null ? value : {}) as Record<string, unknown>;
+  if (typeof id !== "string" || !id.trim()) throw new RunError("contender id is required", {}, 400);
+  if (mode !== "native" && mode !== "jev") throw new RunError("contender mode must be native or jev", {}, 400);
+  if (typeof model !== "string" || !model.trim()) throw new RunError("contender model is required", {}, 400);
+  return { id, mode, model: model.trim() };
+}
+
 export function parseBenchmarkRequest(body: unknown): BenchmarkRequest {
   if (typeof body !== "object" || body === null) throw new RunError("body must be a JSON object", {}, 400);
-  const { itemId, modelA, modelB, judgeModel } = body as Record<string, unknown>;
+  const { itemId, contenders, judgeModel } = body as Record<string, unknown>;
   if (typeof itemId !== "string" || !dataset.some((item) => item.id === itemId)) {
     throw new RunError(`unknown itemId: ${String(itemId)}`, {}, 400);
   }
-  for (const [name, value] of Object.entries({ modelA, modelB, judgeModel })) {
-    if (typeof value !== "string" || !value.trim()) throw new RunError(`${name} is required`, {}, 400);
+  if (!Array.isArray(contenders) || contenders.length < 1 || contenders.length > MAX_CONTENDERS) {
+    throw new RunError(`contenders must hold 1 to ${MAX_CONTENDERS} entries`, {}, 400);
   }
-  return { itemId, modelA: (modelA as string).trim(), modelB: (modelB as string).trim(), judgeModel: (judgeModel as string).trim() };
+  if (typeof judgeModel !== "string" || !judgeModel.trim()) throw new RunError("judgeModel is required", {}, 400);
+  const parsed = contenders.map(parseContender);
+  // Results are matched back to contenders by id, so ids must be unique.
+  if (new Set(parsed.map((c) => c.id)).size !== parsed.length) throw new RunError("contender ids must be unique", {}, 400);
+  return { itemId, contenders: parsed, judgeModel: judgeModel.trim() };
 }
 
-// Runs one benchmark item through both paths in parallel, then judges each path that returned.
+// Runs one benchmark item through every contender in parallel, then judges each run that returned.
 export async function runBenchmarkItem(req: BenchmarkRequest, deps: Deps = realDeps) {
   const item = dataset.find((i) => i.id === req.itemId);
   if (!item) throw new RunError(`unknown itemId: ${req.itemId}`, {}, 400);
   const input = (model: string) => ({ model, question: item.question, deciderModel: JEV_DEFAULT_MODEL });
-  const [a, b] = await Promise.all([
-    evaluatePath(item, deps.runA(input(req.modelA)), req.judgeModel, deps),
-    evaluatePath(item, deps.runB(input(req.modelB)), req.judgeModel, deps),
-  ]);
-  return { itemId: item.id, question: item.question, expectedTool: item.expectedTool, a, b };
+  const results = await Promise.all(
+    req.contenders.map(async (c) => ({
+      contenderId: c.id,
+      ...(await evaluatePath(item, (c.mode === "native" ? deps.runA : deps.runB)(input(c.model)), req.judgeModel, deps)),
+    })),
+  );
+  return { itemId: item.id, question: item.question, expectedTool: item.expectedTool, results };
 }
