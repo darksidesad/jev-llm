@@ -1,6 +1,6 @@
 import type { ToolDef } from "./tools";
 
-const OPENROUTER_API = "https://openrouter.ai/api/v1";
+const OPENROUTER_ROOT = "https://openrouter.ai/api";
 
 export type ToolCall = {
   id: string;
@@ -32,7 +32,7 @@ export type RawModel = {
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const key = process.env.OPENROUTER_KEY;
   if (!key) throw new Error("OPENROUTER_KEY is not set");
-  const res = await fetch(`${OPENROUTER_API}${path}`, {
+  const res = await fetch(`${OPENROUTER_ROOT}${path}`, {
     ...init,
     headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json", ...init.headers },
   });
@@ -41,7 +41,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export function fetchModels(): Promise<{ data: RawModel[] }> {
-  return request("/models");
+  return request("/v1/models");
 }
 
 export function chat(
@@ -49,8 +49,38 @@ export function chat(
   messages: ChatMessage[],
   tools?: ToolDef[],
 ): Promise<ChatCompletion> {
-  return request("/chat/completions", {
+  return request("/v1/chat/completions", {
     method: "POST",
     body: JSON.stringify({ model, messages, ...(tools ? { tools } : {}) }),
   });
+}
+
+// Jev Decisions API (alpha). Only Choice questions are used; Jev returns no free text.
+export type JevChoiceQuestion = {
+  type: "choice";
+  instructions: string;
+  criteria: Record<string, string>;
+};
+
+export type JevChoiceAnswer = {
+  type: "choice";
+  choice: string;
+  confidence?: number;
+  probabilities: Record<string, number>;
+};
+
+export type JevRequest = {
+  model: string;
+  state: Record<string, unknown>;
+  questions: Record<string, JevChoiceQuestion>;
+};
+
+export type JevResponse = {
+  model: string;
+  answers: Record<string, JevChoiceAnswer>;
+  usage?: { cost?: number; input_tokens: number; output_tokens: number };
+};
+
+export function jevDecide(body: JevRequest): Promise<JevResponse> {
+  return request("/alpha/decisions", { method: "POST", body: JSON.stringify(body) });
 }

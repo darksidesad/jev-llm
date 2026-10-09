@@ -1,6 +1,8 @@
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
+import type { Context } from "hono";
 import { getModels } from "./models";
+import { parseRunInput, RunError, runPathA, runPathB } from "./run";
 
 // Fail now with a clear message; otherwise every OpenRouter call fails later with an opaque 401.
 if (!process.env.OPENROUTER_KEY?.trim()) {
@@ -15,6 +17,28 @@ app.get("/api/models", async (c) => {
     return c.json(await getModels());
   } catch (err) {
     return c.json({ error: (err as Error).message }, 502);
+  }
+});
+
+// Failures keep the path and the stage timings reached so far, so the UI can show them.
+function runFailure(c: Context, path: "A" | "B", err: unknown) {
+  if (err instanceof RunError) return c.json({ path, error: err.message, timings: err.timings }, err.status);
+  return c.json({ path, error: (err as Error).message, timings: {} }, 502);
+}
+
+app.post("/api/run/a", async (c) => {
+  try {
+    return c.json(await runPathA(parseRunInput(await c.req.json().catch(() => null))));
+  } catch (err) {
+    return runFailure(c, "A", err);
+  }
+});
+
+app.post("/api/run/b", async (c) => {
+  try {
+    return c.json(await runPathB(parseRunInput(await c.req.json().catch(() => null))));
+  } catch (err) {
+    return runFailure(c, "B", err);
   }
 });
 
