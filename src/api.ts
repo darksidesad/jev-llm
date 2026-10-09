@@ -67,3 +67,42 @@ export async function runPath(path: "a" | "b", model: string, question: string):
   if (!res.ok) throw failure(res, body);
   return body as RunResult;
 }
+
+// Shapes mirror server/benchmark.ts.
+export type BenchItem = { id: string; question: string; expectedTool: string };
+
+export type Judge = { clarity: number; faithfulness: number } | { error: string };
+
+export type PathBench =
+  | { result: RunResult; toolCorrect: boolean; argsCorrect: boolean; judge: Judge }
+  | { error: string; toolCorrect: false; argsCorrect: false };
+
+export type BenchItemResponse = {
+  itemId: string;
+  question: string;
+  expectedTool: string;
+  a: PathBench;
+  b: PathBench;
+};
+
+export async function getBenchmarkItems(): Promise<BenchItem[]> {
+  const res = await fetch("/api/benchmark/items");
+  const body = await readJson(res);
+  if (!res.ok) throw failure(res, body);
+  return body as BenchItem[];
+}
+
+export async function runBenchmarkItem(
+  body: { itemId: string; modelA: string; modelB: string; judgeModel: string },
+  signal: AbortSignal,
+): Promise<BenchItemResponse> {
+  const res = await fetch("/api/benchmark/item", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const json = await readJson(res);
+  if (!res.ok) throw failure(res, json);
+  return json as BenchItemResponse;
+}

@@ -1,7 +1,15 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ApiError, getModels, runPath, type ModelInfo, type RunState } from "./api";
+import { BenchmarkView } from "./components/BenchmarkView";
 import { PathColumn } from "./components/PathColumn";
 import { RaceStrip } from "./components/RaceStrip";
+import { defaultModelId } from "./defaultModel";
+
+type Tab = "compare" | "benchmark";
+const TABS: { id: Tab; label: string }[] = [
+  { id: "compare", label: "Compare" },
+  { id: "benchmark", label: "Benchmark" },
+];
 
 const EXAMPLES = ["Where is my order A1001?", "What is the weather in Madrid right now?", "What is 12 * (3 + 4)?"];
 const STORAGE_KEYS = { a: "jev-llm.model.a", b: "jev-llm.model.b" } as const;
@@ -38,6 +46,7 @@ export default function App() {
   const [colA, setColA] = useState<RunState>(IDLE);
   const [colB, setColB] = useState<RunState>(IDLE);
   const [runId, setRunId] = useState(0);
+  const [tab, setTab] = useState<Tab>("compare");
   const latestRun = useRef(0);
 
   useEffect(() => {
@@ -45,8 +54,7 @@ export default function App() {
   }, []);
 
   const list = models ?? [];
-  // Both paths start on the same cheap model that supports tools; free models are often rate limited.
-  const defaultModel = list.find((m) => m.id === "openai/gpt-oss-20b")?.id ?? list.find((m) => m.free && m.tools)?.id ?? list.find((m) => m.tools)?.id ?? "";
+  const defaultModel = defaultModelId(list);
   const modelA = resolveModel(list, stored.a, true, defaultModel);
   const modelB = resolveModel(list, stored.b, false, defaultModel);
   const running = colA.status === "running" || colB.status === "running";
@@ -104,6 +112,34 @@ export default function App() {
         </p>
       </header>
 
+      <nav>
+        <div className="tabs" role="tablist" aria-label="Views">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              id={`tab-${t.id}`}
+              type="button"
+              role="tab"
+              className="tab"
+              aria-selected={tab === t.id}
+              aria-controls={`panel-${t.id}`}
+              tabIndex={tab === t.id ? 0 : -1}
+              onClick={() => setTab(t.id)}
+              onKeyDown={(e) => {
+                if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+                e.preventDefault();
+                const next: Tab = tab === "compare" ? "benchmark" : "compare";
+                setTab(next);
+                document.getElementById(`tab-${next}`)?.focus();
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </nav>
+
+      <div role="tabpanel" id="panel-compare" aria-labelledby="tab-compare" hidden={tab !== "compare"}>
       <form className="composer" onSubmit={onSubmit}>
         <label htmlFor="question">Question</label>
         <textarea
@@ -149,6 +185,11 @@ export default function App() {
           onModelChange={pickModel("b")}
           state={colB}
         />
+      </div>
+      </div>
+
+      <div role="tabpanel" id="panel-benchmark" aria-labelledby="tab-benchmark" hidden={tab !== "benchmark"}>
+        <BenchmarkView models={models} modelsError={modelsError} />
       </div>
     </main>
   );

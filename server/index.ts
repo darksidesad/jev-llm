@@ -3,6 +3,8 @@ import { Hono } from "hono";
 import type { Context } from "hono";
 import { getModels } from "./models";
 import { parseRunInput, RunError, runPathA, runPathB } from "./run";
+import { dataset } from "./dataset";
+import { parseBenchmarkRequest, runBenchmarkItem } from "./benchmark";
 
 // Fail now with a clear message; otherwise every OpenRouter call fails later with an opaque 401.
 if (!process.env.OPENROUTER_KEY?.trim()) {
@@ -39,6 +41,19 @@ app.post("/api/run/b", async (c) => {
     return c.json(await runPathB(parseRunInput(await c.req.json().catch(() => null))));
   } catch (err) {
     return runFailure(c, "B", err);
+  }
+});
+
+app.get("/api/benchmark/items", (c) =>
+  c.json(dataset.map(({ id, question, expectedTool }) => ({ id, question, expectedTool }))),
+);
+
+app.post("/api/benchmark/item", async (c) => {
+  try {
+    return c.json(await runBenchmarkItem(parseBenchmarkRequest(await c.req.json().catch(() => null))));
+  } catch (err) {
+    if (err instanceof RunError) return c.json({ error: err.message }, err.status);
+    return c.json({ error: (err as Error).message }, 502);
   }
 });
 
